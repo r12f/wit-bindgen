@@ -553,7 +553,7 @@ impl Generator for Wasmtime {
         assert!(!needs_buffer_transaction);
 
         // Generate the signature this function will have in the final trait
-        let self_arg = "&mut self".to_string();
+        let self_arg = "&mut self, wasi_ctx: &mut wasmtime_wasi::WasiCtx".to_string();
         self.in_trait = true;
 
         let mut fnsig = FnSig::default();
@@ -654,7 +654,7 @@ impl Generator for Wasmtime {
         }
 
         if self.all_needed_handles.len() > 0 {
-            self.src.push_str("let (host, _tables) = host;\n");
+            self.src.push_str("let (host, wasi_ctx, _tables) = host;\n");
         }
 
         self.src.push_str(&String::from(src));
@@ -882,7 +882,7 @@ impl Generator for Wasmtime {
             if self.all_needed_handles.is_empty() {
                 self.push_str("&mut U");
             } else {
-                self.push_str(&format!("(&mut U, &mut {}Tables<U>)", module_camel));
+                self.push_str(&format!("(&mut U, &mut wasmtime_wasi::WasiCtx, &mut {}Tables<U>)", module_camel));
             }
             self.push_str("+ Send + Sync + Copy + 'static) -> anyhow::Result<()> \n");
             self.push_str("where U: ");
@@ -914,7 +914,7 @@ impl Generator for Wasmtime {
                         \"canonical_abi\",
                         \"resource_drop_{name}\",
                         move |mut caller: wasmtime::Caller<'_, T>, handle: u32| {{
-                            let (host, tables) = get(caller.data_mut());
+                            let (host, _wasi_ctx, tables) = get(caller.data_mut());
                             let handle = tables
                                 .{snake}_table
                                 .remove(handle)
@@ -1319,7 +1319,7 @@ impl FunctionBindgen<'_> {
                     self.push_str(
                         "let (caller_memory, data) = memory.data_and_store_mut(&mut caller);\n",
                     );
-                    self.push_str("let (_, _tables) = get(data);\n");
+                    self.push_str("let (_, _wasi_ctx, _tables) = get(data);\n");
                 } else {
                     self.push_str("let caller_memory = memory.data_mut(&mut caller);\n");
                 }
@@ -2070,7 +2070,7 @@ impl Bindgen for FunctionBindgen<'_> {
                     self.push_str(");\n");
                 }
 
-                let mut call = format!("host.{}(", func.name.to_snake_case());
+                let mut call = format!("host.{}(wasi_ctx, ", func.name.to_snake_case());
                 for i in 0..operands.len() {
                     call.push_str(&format!("param{}, ", i));
                 }
