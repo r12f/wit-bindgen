@@ -17,6 +17,6 @@ structopt = { version = "0.3", default-features = false, optional = true }
 [dev-dependencies]
 anyhow = "1.0"
 test-helpers = { path = '../test-helpers', features = ['wit-bindgen-gen-wasmtime'] }
-wasmtime = "0.39.1"
-wasmtime-wasi = "0.39.1"
+wasmtime = { git = "https://github.com/futurewei-cloud/wasmtime", branch = "release-0.39.0" }
+wasmtime-wasi = { git = "https://github.com/futurewei-cloud/wasmtime", branch = "release-0.39.0" }
 wit-bindgen-wasmtime = { path = '../wasmtime', features = ['tracing', 'async'] }
